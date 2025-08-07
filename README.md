@@ -5,6 +5,8 @@ This is a Next.js application that allows users to edit a GitHub repository's RE
 
 test
 
+![](https://uhbhoacsiapasvxjauyk.supabase.co/storage/v1/object/public/images/1754587973857-red_panda_pastel_brown_bg.png)
+
 Getting Started
 ---------------
 
