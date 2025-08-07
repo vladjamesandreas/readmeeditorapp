@@ -1,7 +1,7 @@
 GitHub Readme Editor asd
 ========================
 
-**This is a Next.j**s application that allows users to edit a GitHub repository's README.md file directly in the browser and push changes back to the repository.
+**This is a Next.j**s application that allows users to edit a GitHub repository's README.md file directly in the browser and push changes back to the repository. asd asd
 
 Getting Started
 ---------------
