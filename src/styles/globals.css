@@ -76,3 +76,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+.gradient-background {
+  background: linear-gradient(135deg, #3a1c71, #d76d77, #ffaf7b);
+}

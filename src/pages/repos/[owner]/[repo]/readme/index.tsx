@@ -1,14 +1,9 @@
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
-import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { getOctokit } from '../../../../../lib/github';
-
-const MarkdownEditor = dynamic(
-  () => import('@uiw/react-markdown-editor').then((mod) => mod.default),
-  { ssr: false }
-);
+import RichTextEditor from '../../../../../components/RichTextEditor';
 
 export default function ReadmeEditor() {
   const supabaseClient = useSupabaseClient();
@@ -82,10 +77,7 @@ export default function ReadmeEditor() {
         <p>Loading...</p>
       ) : (
         <div>
-          <MarkdownEditor
-            value={content}
-            onChange={(value) => setContent(value)}
-          />
+          <RichTextEditor content={content} onChange={setContent} />
           <button
             onClick={handleSave}
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4"

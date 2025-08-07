@@ -43,32 +43,30 @@ export default function Login() {
       <Head>
         <title>Sign In - GitHub README Editor</title>
       </Head>
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <Image
-                src="/file.svg" // Assuming this is the project logo
-                alt="GitHub README Editor Logo"
-                width={64}
-                height={64}
-              />
-            </div>
-            <CardTitle className="text-2xl font-bold">
-              GitHub README Editor
-            </CardTitle>
-            <CardDescription>
-              Sign in with your GitHub account to continue.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={handleLogin} className="w-full">
-              <GitHubIcon className="w-5 h-5 mr-2" />
-              Sign in with GitHub
-            </Button>
-          </CardContent>
-        </Card>
-        <p className="mt-8 text-xs text-muted-foreground">
+      <div className="min-h-screen gradient-background flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md text-center">
+          <h1 className="text-5xl font-bold text-white mb-4">
+            GitHub README Editor
+          </h1>
+          <p className="text-lg text-white mb-8">
+            Effortlessly create and customize professional READMEs for your GitHub projects.
+          </p>
+          <Card className="bg-white/10 backdrop-blur-sm border-none">
+            <CardHeader>
+              <CardTitle className="text-white">Get Started</CardTitle>
+              <CardDescription className="text-white/80">
+                Sign in with your GitHub account to begin.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={handleLogin} className="w-full bg-white text-black hover:bg-gray-200">
+                <GitHubIcon className="w-5 h-5 mr-2" />
+                Sign in with GitHub
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+        <p className="mt-8 text-xs text-white/60">
           &copy; {new Date().getFullYear()} README Editor. All rights reserved.
         </p>
       </div>
