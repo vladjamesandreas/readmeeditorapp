@@ -1,9 +1,9 @@
-GitHub <span style="color:rgb(153, 10, 10)">README</span> Editor
-================================================================
+GitHub Readme Editor asd
+========================
 
-**This is a Next.j**s application that allows users to edit a GitHub repository's README.md file directly in the browser and push changes back to the repository.
+**This is a Next.j**s application that allows users to edit a GitHub repository's README.md file directly in the browser and push changes back to the repository. asd asd
 
-![](https://uhbhoacsiapasvxjauyk.supabase.co/storage/v1/object/public/images/public/1754248085683-red_panda_pastel_brown_bg.png)
+![](https://uhbhoacsiapasvxjauyk.supabase.co/storage/v1/object/public/images/1754587609310-red_panda_pastel_brown_bg.png)
 
 Getting Started
 ---------------
