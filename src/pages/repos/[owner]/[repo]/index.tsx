@@ -213,7 +213,7 @@ export default function RepositoryPage() {
             if (!session?.provider_token) throw new Error("GitHub token not found");
 
             const octokit = getOctokit(session.provider_token);
-            const { content, sha } = await getFileContent(octokit, owner!, repo!, path);
+            const { content, sha } = await getFileContent(octokit, owner!, repo!, path, selectedBranch);
             setFileContent(content);
             setEditedContent(content);
             setFileSha(sha);
@@ -236,17 +236,34 @@ export default function RepositoryPage() {
             if (!session?.provider_token) throw new Error("GitHub token not found");
 
             const octokit = getOctokit(session.provider_token);
+
+            // Fetch the latest SHA before committing
+            const { sha: latestSha } = await getFileContent(octokit, owner!, repo!, selectedFile, selectedBranch);
+
+            if (latestSha !== fileSha) {
+                toast.error("File has changed on GitHub. Please reload the page to get the latest version.", { duration: 5000 });
+                setIsCommitting(false);
+                return;
+            }
+
             const message = commitMessage || `Update ${selectedFile}`;
 
-            await updateFile(octokit, owner!, repo!, selectedFile, editedContent, fileSha, selectedBranch, message);
+            const data = await updateFile(octokit, owner!, repo!, selectedFile, editedContent, latestSha, selectedBranch, message);
 
             toast.success("File committed successfully!");
             setIsEditing(false);
             setFileContent(editedContent);
+            if (data.content?.sha) {
+                setFileSha(data.content.sha);
+            }
             setCommitMessage("");
         } catch (err: unknown) {
             console.error("Error committing file:", err);
-            toast.error("Failed to commit file.");
+            if ((err as any).status === 409) {
+                toast.error("Conflict: File has changed on GitHub. Please reload the page.", { duration: 5000 });
+            } else {
+                toast.error("Failed to commit file.");
+            }
         } finally {
             setIsCommitting(false);
         }

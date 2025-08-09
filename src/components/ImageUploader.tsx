@@ -3,7 +3,7 @@ import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import { toast } from 'react-hot-toast';
 
 interface Props {
-  onUpload: (url: string) => void;
+  onUpload: (path: string) => void;
 }
 
 const ImageUploader: FC<Props> = ({ onUpload }) => {
@@ -18,7 +18,9 @@ const ImageUploader: FC<Props> = ({ onUpload }) => {
     try {
       const { data, error } = await supabase.storage
         .from('images')
-        .upload(`public/${Date.now()}-${file.name}`, file, {
+        .upload(`${Date.now()}-${file.name}`, file, {
+          cacheControl: '3600',
+          upsert: false,
           contentType: file.type,
         });
 
@@ -26,8 +28,7 @@ const ImageUploader: FC<Props> = ({ onUpload }) => {
         throw error;
       }
 
-      const publicUrl = supabase.storage.from('images').getPublicUrl(data.path).data.publicUrl;
-      onUpload(publicUrl);
+      onUpload(data.path);
     } catch (error: any) {
       toast.error(error.message);
     } finally {

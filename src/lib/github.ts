@@ -98,12 +98,13 @@ export async function updateFile(
  * @param {string} path The path to the file.
  * @returns {Promise<{content: string; sha: string}>} A promise that resolves to the file content and sha.
  */
-export async function getFileContent(octokit: Octokit, owner: string, repo: string, path: string): Promise<{content: string; sha: string}> {
+export async function getFileContent(octokit: Octokit, owner: string, repo: string, path: string, branch?: string): Promise<{content: string; sha: string}> {
     try {
         const { data } = await octokit.request("GET /repos/{owner}/{repo}/contents/{path}", {
             owner,
             repo,
-            path
+            path,
+            ref: branch
         });
 
         if (Array.isArray(data) || !("content" in data) || !("sha" in data)) {

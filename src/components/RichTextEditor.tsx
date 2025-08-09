@@ -6,7 +6,6 @@ import TiptapLink from '@tiptap/extension-link';
 import { FC, useEffect, useState } from 'react';
 import TurndownService from 'turndown';
 import { Remarkable } from 'remarkable';
-import TextAlign from '@tiptap/extension-text-align';
 import Table from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
@@ -23,9 +22,6 @@ import {
   Link as LinkIcon,
   Undo,
   Redo,
-  AlignCenter,
-  AlignLeft,
-  AlignRight,
   Quote,
   Code,
   Table as TableIcon,
@@ -43,6 +39,7 @@ interface Props {
 
 const RichTextEditor: FC<Props> = ({ content, onChange }) => {
   const [editMode, setEditMode] = useState<'rich' | 'raw'>('rich');
+  const [unsavedImagePaths, setUnsavedImagePaths] = useState<string[]>([]);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -57,16 +54,22 @@ const RichTextEditor: FC<Props> = ({ content, onChange }) => {
       Placeholder.configure({
         placeholder: 'Start typing...',
       }),
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
       Table.configure({
         resizable: true,
       }),
       TableRow,
       TableCell,
       TableHeader,
-      Image,
+      Image.extend({
+        addAttributes() {
+          return {
+            ...this.parent?.(),
+            'data-image-path': {
+              default: null,
+            },
+          };
+        },
+      }),
     ],
     editorProps: {
       attributes: {
@@ -75,7 +78,20 @@ const RichTextEditor: FC<Props> = ({ content, onChange }) => {
       },
     },
     onUpdate: ({ editor }) => {
-      onChange(turndownService.turndown(editor.getHTML()));
+      const html = editor.getHTML();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const images = doc.querySelectorAll('img');
+
+      images.forEach((img) => {
+        const path = img.getAttribute('data-image-path');
+        if (path) {
+          const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/${path}`;
+          img.setAttribute('src', publicUrl);
+        }
+      });
+
+      onChange(turndownService.turndown(doc.body.innerHTML));
     },
   });
 
@@ -84,6 +100,21 @@ const RichTextEditor: FC<Props> = ({ content, onChange }) => {
       editor.commands.setContent(md.render(content));
     }
   }, [content, editor]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (unsavedImagePaths.length > 0) {
+        const payload = JSON.stringify({ filePaths: unsavedImagePaths });
+        navigator.sendBeacon('/api/storage/cleanup', payload);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [unsavedImagePaths]);
 
   const toggleEditMode = () => {
     setEditMode(editMode === 'rich' ? 'raw' : 'rich');
@@ -101,7 +132,10 @@ const RichTextEditor: FC<Props> = ({ content, onChange }) => {
       </div>
       {editMode === 'rich' ? (
         <>
-          <Toolbar editor={editor} />
+          <Toolbar
+            editor={editor}
+            setUnsavedImagePaths={setUnsavedImagePaths}
+          />
           <EditorContent editor={editor} />
         </>
       ) : (
@@ -117,7 +151,10 @@ const RichTextEditor: FC<Props> = ({ content, onChange }) => {
   );
 };
 
-const Toolbar: FC<{ editor: Editor | null }> = ({ editor }) => {
+const Toolbar: FC<{
+  editor: Editor | null;
+  setUnsavedImagePaths: React.Dispatch<React.SetStateAction<string[]>>;
+}> = ({ editor, setUnsavedImagePaths }) => {
   if (!editor) {
     return null;
   }
@@ -201,38 +238,39 @@ const Toolbar: FC<{ editor: Editor | null }> = ({ editor }) => {
           <TableIcon className="w-5 h-5" />
         </button>
         <ImageUploader
-          onUpload={(url) => {
-            if (url) {
-              editor.chain().focus().setImage({ src: url }).run();
+          onUpload={async (path) => {
+            if (path) {
+              try {
+                const response = await fetch('/api/storage/signed-url', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ filePath: path }),
+                });
+
+                if (!response.ok) {
+                  throw new Error('Failed to get signed URL');
+                }
+
+                const { signedUrl } = await response.json();
+                editor
+                  .chain()
+                  .focus()
+                  .setImage({
+                    src: signedUrl,
+                    'data-image-path': path,
+                  } as any)
+                  .run();
+                setUnsavedImagePaths((prev) => [...prev, path]);
+              } catch (error) {
+                console.error(error);
+                // Handle error, maybe show a toast notification
+              }
             }
           }}
         />
         <Link editor={editor} />
-        <button
-          onClick={() => editor.chain().focus().setTextAlign('left').run()}
-          className={editor.isActive({ textAlign: 'left' }) ? 'is-active' : ''}
-          title="Align Left"
-        >
-          <AlignLeft className="w-5 h-5" />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().setTextAlign('center').run()}
-          className={
-            editor.isActive({ textAlign: 'center' }) ? 'is-active' : ''
-          }
-          title="Align Center"
-        >
-          <AlignCenter className="w-5 h-5" />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().setTextAlign('right').run()}
-          className={
-            editor.isActive({ textAlign: 'right' }) ? 'is-active' : ''
-          }
-          title="Align Right"
-        >
-          <AlignRight className="w-5 h-5" />
-        </button>
       </div>
       <div className="flex items-center space-x-2">
         <button
