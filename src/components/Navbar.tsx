@@ -1,4 +1,5 @@
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
@@ -43,9 +44,11 @@ export default function Navbar() {
             <DropdownMenu>
               <DropdownMenuTrigger>
                 {user.user_metadata.avatar_url ? (
-                  <img
+                  <Image
                     src={user.user_metadata.avatar_url}
                     alt={user.user_metadata.user_name}
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded-full border-2 border-white"
                   />
                 ) : (

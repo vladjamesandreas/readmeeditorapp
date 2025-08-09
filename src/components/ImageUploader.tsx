@@ -29,8 +29,12 @@ const ImageUploader: FC<Props> = ({ onUpload }) => {
       }
 
       onUpload(data.path);
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error('An unknown error occurred');
+      }
     } finally {
       setIsUploading(false);
     }

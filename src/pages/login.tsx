@@ -1,7 +1,6 @@
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import toast from 'react-hot-toast';
-import Head from 'next/head';
-import Image from 'next/image';
+import Head from "next/head";
 import { Button } from '@/components/ui/button';
 import {
   Card,

@@ -32,8 +32,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     return res.status(200).json({ signedUrl: data.signedUrl });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating signed URL:', error);
-    return res.status(500).json({ error: error.message || 'Internal Server Error' });
+    const message = error instanceof Error ? error.message : 'Internal Server Error';
+    return res.status(500).json({ error: message });
   }
 }

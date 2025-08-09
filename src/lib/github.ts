@@ -28,12 +28,12 @@ export function getOctokit(token: string) {
  */
 export async function listBranches(octokit: Octokit, owner: string, repo: string, bustCache: boolean = false) {
   try {
-    const headers: { [key:string]: string } = {
+    const headers: { [key: string]: string } = {
       'X-GitHub-Api-Version': '2022-11-28',
     };
-    const params: { owner: string; repo: string; [key: string]: any } = {
-        owner,
-        repo,
+    const params: { owner: string; repo: string; t?: number } = {
+      owner,
+      repo,
     };
     if (bustCache) {
         params.t = new Date().getTime();

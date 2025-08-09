@@ -25,7 +25,6 @@ import {
   Quote,
   Code,
   Table as TableIcon,
-  Image as ImageIcon,
 } from 'lucide-react';
 import ImageUploader from './ImageUploader';
 
@@ -260,7 +259,7 @@ const Toolbar: FC<{
                   .setImage({
                     src: signedUrl,
                     'data-image-path': path,
-                  } as any)
+                  })
                   .run();
                 setUnsavedImagePaths((prev) => [...prev, path]);
               } catch (error) {

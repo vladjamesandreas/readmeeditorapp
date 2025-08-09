@@ -1,10 +1,9 @@
 import { Octokit } from "octokit";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
 import { getOctokit, listBranches, getRepoDetails, createBranch, sleep, getTree, getFileContent, updateFile } from "@/lib/github";
-import { getSupabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "react-hot-toast";
@@ -55,31 +54,35 @@ export default function RepositoryPage() {
     const [isCommitting, setIsCommitting] = useState(false);
 
     /** Fetch branch list and set default / target branch */
-    const fetchBranchesList = async (octokit: Octokit, targetBranchName?: string, bustCache = false) => {
-        setIsLoadingBranches(true); // FIX: always show spinner at call-time
-        setError(null);
+    const fetchBranchesList = useCallback(
+        async (octokit: Octokit, targetBranchName?: string, bustCache = false) => {
+            setIsLoadingBranches(true); // FIX: always show spinner at call-time
+            setError(null);
 
-        try {
-            const fetchedBranches = await listBranches(octokit, owner!, repo!, bustCache);
+            try {
+                const fetchedBranches = await listBranches(octokit, owner!, repo!, bustCache);
 
-            setBranches(fetchedBranches);
+                setBranches(fetchedBranches);
 
-            // Decide which branch should be selected
-            const branchToSelect =
-                (targetBranchName && fetchedBranches.some((b) => b.name === targetBranchName) && targetBranchName) || // explicit target
-                (selectedBranch && fetchedBranches.some((b) => b.name === selectedBranch) && selectedBranch) || // keep current if still present
-                fetchedBranches.find((b) => b.name === "main" || b.name === "master")?.name || // else main/master
-                fetchedBranches[0]?.name; // else first
+                // Decide which branch should be selected
+                const branchToSelect =
+                    (targetBranchName && fetchedBranches.some((b) => b.name === targetBranchName) && targetBranchName) || // explicit target
+                    (selectedBranch && fetchedBranches.some((b) => b.name === selectedBranch) && selectedBranch) || // keep current if still present
+                    fetchedBranches.find((b) => b.name === "main" || b.name === "master")?.name || // else main/master
+                    fetchedBranches[0]?.name; // else first
 
-            setSelectedBranch(branchToSelect);
-        } catch (err: unknown) {
-            console.error("Error fetching branches:", err);
-            toast.error(`Failed to fetch branches: ${err instanceof Error ? err.message : "Unknown error"}`);
-            setError(`Failed to fetch branches: ${err instanceof Error ? err.message : "Unknown error"}`);
-        } finally {
-            setIsLoadingBranches(false);
-        }
-    };
+                setSelectedBranch(branchToSelect);
+            } catch (err: unknown) {
+                console.error("Error fetching branches:", err);
+                toast.error(`Failed to fetch branches: ${err instanceof Error ? err.message : "Unknown error"}`);
+                setError(`Failed to fetch branches: ${err instanceof Error ? err.message : "Unknown error"}`);
+            } finally {
+                setIsLoadingBranches(false);
+            }
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        },
+        [owner, repo]
+    );
 
     /** Initial load – waits until both the router and the user are ready */
     useEffect(() => {
@@ -111,7 +114,7 @@ export default function RepositoryPage() {
         return () => {
             cancelled = true; // avoid setState on unmounted component
         };
-    }, [router.isReady, user, owner, repo, supabase]);
+    }, [router.isReady, user, owner, repo, supabase, fetchBranchesList]);
 
     /** Fetch file tree for the selected branch */
     useEffect(() => {
@@ -259,7 +262,8 @@ export default function RepositoryPage() {
             setCommitMessage("");
         } catch (err: unknown) {
             console.error("Error committing file:", err);
-            if ((err as any).status === 409) {
+            const conflict = typeof err === "object" && err !== null && "status" in err && (err as { status?: number }).status === 409;
+            if (conflict) {
                 toast.error("Conflict: File has changed on GitHub. Please reload the page.", { duration: 5000 });
             } else {
                 toast.error("Failed to commit file.");
